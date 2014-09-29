@@ -97,6 +97,20 @@ class App
     return @users
   end
 
+  def add_user(name, ruby, login, email)
+    open_mode = RUBY_VERSION < '1.9.0' ? 'a' : 'a:utf-8'
+    File.open(FILES[:data], open_mode) do |f|
+      f.write <<-EOS
+- name: #{name}
+  ruby: #{ruby}
+  login: '#{login}'
+  email: #{email}
+      EOS
+    end
+    require 'user'
+    @users << User.new({"name" => name, "ruby" => ruby, "login" => login, "email" => email})
+  end
+
   def user_from_token(token)
     return users.inject(nil) do |r, u|
       (u.token == token || u.real_login == token) ? u.real_login : r

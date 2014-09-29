@@ -17,6 +17,7 @@ class User
   def login() return real_login end
   def name() return @user['name'] end
   def ruby() return @user['ruby'] end
+  def email() return @user['email'] end
   def []=(k, rep) @report[k] = rep if rep end
 
   def to_hash()
@@ -25,6 +26,7 @@ class User
       'login'    => login,
       'token'    => token,
       'name'     => name,
+      'email'    => email,
       'ruby'     => ruby,
     }
     hash['report'] = {} unless report.empty?
