@@ -21,13 +21,12 @@ class AlreadyRegistered < Exception; end
 
 begin
   email = helper.param(:email)
-  user = app.users.find {|u| u.email == email}
-
-  raise AlreadyRegistered if user
-
   name = helper.param(:name)
   ruby = helper.param(:ruby)
   login = helper.param(:login).to_s
+
+  found = app.users.any? {|u| u.email == email || u.login == login}
+  raise AlreadyRegistered if found
 
   app.add_user(name, ruby, login, email)
 
