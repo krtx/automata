@@ -26,7 +26,6 @@ class User
       'login'    => login,
       'token'    => token,
       'name'     => name,
-      'email'    => email,
       'ruby'     => ruby,
     }
     hash['report'] = {} unless report.empty?
