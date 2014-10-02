@@ -9,6 +9,7 @@ require 'bundler/setup'
 require 'clone'
 require 'conf'
 require 'log'
+require 'store'
 
 class Pathname
   def [](*paths)
@@ -87,28 +88,27 @@ class App
   def users()
     unless @users
       require 'user'
-      @users = file(:data)['data'].map{|u| User.new(u)}
-      @users.reject!{|u| u.login != user} unless conf[:record, :open] || su?
-      unless conf[:record, :show_login]
-        # override User#login to hide user login name
-        @users.each{|u| def u.login() return token end}
+      user_store = Store::YAML.new(FILES[:data])
+      user_store.ro.transaction do |store|
+        @users = store['data'].map{|u| User.new(u)}
+        @users.reject{|u| u.login != user} unless conf[:record, :open] || su?
+        unless conf[:record, :show_login]
+          # Override User#login to hide user login name
+          @users.each{|u| def u.login() return token end}
+        end
       end
     end
     return @users
   end
 
   def add_user(name, ruby, login, email)
-    open_mode = RUBY_VERSION < '1.9.0' ? 'a' : 'a:utf-8'
-    File.open(FILES[:data], open_mode) do |f|
-      f.write <<-EOS
-- name: #{name}
-  ruby: #{ruby}
-  login: '#{login}'
-  email: #{email}
-      EOS
+    user_store = Store::YAML.new(FILES[:data])
+    user_store.transaction do |store|
+      users = store['data']
+      users << {'name' => name, 'ruby' => ruby, 'login' => login, 'email' => email}
+      store['data'] = users
+      @users = nil
     end
-    require 'user'
-    @users << User.new({"name" => name, "ruby" => ruby, "login" => login, "email" => email})
   end
 
   def user_from_token(token)
